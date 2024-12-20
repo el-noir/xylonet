@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/Xylonet.dir/main.cpp.o CMakeFiles/Xylonet.dir/src/DAG.cpp.o CMakeFiles/Xylonet.dir/src/Transaction.cpp.o CMakeFiles/Xylonet.dir/src/Wallet.cpp.o CMakeFiles/Xylonet.dir/src/Network.cpp.o CMakeFiles/Xylonet.dir/src/Storage.cpp.o -o Xylonet
