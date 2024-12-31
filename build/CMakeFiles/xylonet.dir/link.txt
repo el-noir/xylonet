@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/xylonet.dir/main.cpp.o CMakeFiles/xylonet.dir/src/transaction.cpp.o CMakeFiles/xylonet.dir/src/user.cpp.o CMakeFiles/xylonet.dir/src/network.cpp.o CMakeFiles/xylonet.dir/src/wallet.cpp.o CMakeFiles/xylonet.dir/src/Xylonet.cpp.o CMakeFiles/xylonet.dir/src/DAG.cpp.o -o xylonet  /usr/local/lib/libcryptopp.a
