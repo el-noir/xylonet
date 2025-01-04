@@ -1,0 +1,3 @@
+D:/Academia/DSA Project/xylo/build/CMakeFiles/Xylonet.dir
+D:/Academia/DSA Project/xylo/build/CMakeFiles/ALL_BUILD.dir
+D:/Academia/DSA Project/xylo/build/CMakeFiles/ZERO_CHECK.dir
