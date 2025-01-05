@@ -1,260 +1,3 @@
-//#include "DAG.h"
-//#include <iostream>
-//#include <cmath>
-//#include <ctime>
-//#include <functional>
-//#include <random>
-//#include <sstream>
-//#include <unordered_set>
-//#include <unordered_map>
-//#include <fstream>
-//#include <vector>
-//#include "TransactionNode.h"
-//#include "HashUtils.h"
-//
-//// Check for cycles in the DAG (Depth-First Search approach)
-//bool DAG::hasCycle(const std::string& node,
-//    std::unordered_set<std::string>& visited,
-//    std::unordered_set<std::string>& stack) {
-//    if (stack.find(node) != stack.end()) {
-//        return true;  // Cycle detected
-//    }
-//    if (visited.find(node) != visited.end()) {
-//        return false; // Node already visited
-//    }
-//
-//    visited.insert(node);
-//    stack.insert(node);
-//
-//    for (const auto& neighbor : adjList[node]) {
-//        if (hasCycle(neighbor, visited, stack)) {
-//            return true;
-//        }
-//    }
-//
-//    stack.erase(node);
-//    return false;
-//}
-//
-//// Update cumulative weights of a transaction recursively
-//int DAG::updateCumulativeWeights(const std::string& hash) {
-//    if (cumulativeWeights.find(hash) != cumulativeWeights.end()) {
-//        return cumulativeWeights[hash];
-//    }
-//
-//    cumulativeWeights[hash] = 1; // Base weight of 1
-//
-//    for (const auto& neighbor : adjList[hash]) {
-//        cumulativeWeights[hash] += updateCumulativeWeights(neighbor);
-//    }
-//
-//    return cumulativeWeights[hash];
-//}
-//
-//// Select parents for a transaction using MCMC method
-////std::vector<std::string> DAG::selectParentsMCMC(size_t numParents) {
-////    std::vector<TipInfo> unapprovedTips;
-////
-////    // Identify unapproved tips (nodes without any outgoing edges)
-////    for (const auto& pair : transactions) {
-////        if (adjList.find(pair.first) == adjList.end() || adjList[pair.first].empty()) {
-////            unapprovedTips.push_back({ pair.first, updateCumulativeWeights(pair.first), pair.second.timestamp });
-////        }
-////    }
-////
-////    if (unapprovedTips.empty()) {
-////        std::cout << "No tips available for parent selection.\n";
-////        return {};
-////    }
-////
-////    double totalWeight = 0.0;
-////    std::vector<double> probabilities;
-////
-////    for (const auto& tip : unapprovedTips) {
-////        double weight = tip.cumulativeWeight * exp(-difftime(time(nullptr), tip.timestamp) / 3600.0);
-////        if (weight > 0) {
-////            totalWeight += weight;
-////            probabilities.push_back(weight);
-////        }
-////        else {
-////            probabilities.push_back(0); // Prevent zero/negative weights
-////        }
-////    }
-////
-////    if (totalWeight == 0.0) {
-////        std::cerr << "Error: Total weight is zero. Cannot normalize probabilities.\n";
-////        return {};
-////    }
-////
-////    for (auto& prob : probabilities) {
-////        prob /= totalWeight; // Normalize probabilities
-////    }
-////
-////    std::vector<std::string> selectedParents;
-////    std::default_random_engine generator(std::random_device{}());
-////    std::discrete_distribution<size_t> distribution(probabilities.begin(), probabilities.end());
-////
-////    std::unordered_set<std::string> selectedSet;
-////    while (selectedParents.size() < numParents && selectedSet.size() < unapprovedTips.size()) {
-////        size_t index = distribution(generator);
-////        if (selectedSet.insert(unapprovedTips[index].hash).second) {
-////            selectedParents.push_back(unapprovedTips[index].hash);
-////        }
-////    }
-////
-////    return selectedParents;
-////}
-//std::vector<std::string> DAG::selectParentsMCMC(size_t numParents) {
-//    std::vector<TipInfo> unapprovedTips;
-//
-//    // Collect unapproved tips (transactions with no children)
-//    for (const auto& pair : transactions) {
-//        if (adjList[pair.first].empty()) {
-//            unapprovedTips.push_back(TipInfo{
-//                pair.first,
-//                cumulativeWeights[pair.first],
-//                pair.second.timestamp,
-//                static_cast<int>(pair.second.amount),  // Fix narrowing conversion
-//                static_cast<int>(pair.second.fee)      // Fix narrowing conversion
-//                });
-//        }
-//    }
-//
-//    if (unapprovedTips.empty()) {
-//        std::cout << "No tips available for parent selection.\n";
-//        return {}; // No parents can be selected
-//    }
-//
-//    // Calculate weights based on cumulative weight, timestamp, amount, and fee
-//    std::vector<double> probabilities;
-//    double totalWeight = 0.0;
-//
-//    for (const auto& tip : unapprovedTips) {
-//        // Calculate time decay (older transactions have less weight)
-//        double timeDecay = exp(-static_cast<double>(difftime(time(nullptr), tip.timestamp)) / 3600.0);
-//
-//        // Calculate fee and amount factors (higher fees and amounts give more weight)
-//        double feeFactor = 1 + log(1 + tip.fee); // Fee modifier
-//        double amountFactor = log(1 + tip.amount); // Amount modifier
-//
-//        // Combine all factors: Cumulative weight * time decay * fee factor * amount factor
-//        double weightedProbability = tip.cumulativeWeight * timeDecay * feeFactor * amountFactor;
-//
-//        probabilities.push_back(weightedProbability);
-//        totalWeight += weightedProbability;
-//    }
-//
-//    // Check for zero total weight and handle by giving equal probability to all tips
-//    if (totalWeight == 0.0) {
-//        probabilities.assign(probabilities.size(), 1.0);
-//        totalWeight = probabilities.size(); // Total weight equals number of tips
-//    }
-//
-//    // Normalize probabilities to make sure they sum up to 1
-//    for (auto& prob : probabilities) {
-//        prob /= totalWeight;
-//    }
-//
-//    // Select multiple unique parents using MCMC with the calculated probabilities
-//    std::vector<std::string> selectedParents;
-//    std::default_random_engine generator(std::random_device{}());
-//    std::discrete_distribution<size_t> distribution(probabilities.begin(), probabilities.end());
-//
-//    std::unordered_set<std::string> selectedSet;
-//    while (selectedParents.size() < numParents && selectedSet.size() < unapprovedTips.size()) {
-//        size_t index = distribution(generator); // Randomly select a tip
-//
-//        // Check if this tip has already been selected (ensuring uniqueness)
-//        if (selectedSet.insert(unapprovedTips[index].hash).second) {
-//            selectedParents.push_back(unapprovedTips[index].hash);
-//        }
-//
-//        // If we have selected enough unique parents, break the loop
-//        if (selectedParents.size() == numParents) {
-//            break;
-//        }
-//    }
-//
-//    // If we couldn't find enough unique parents, log a warning
-//    if (selectedParents.size() < numParents) {
-//        std::cerr << "Warning: Could not select enough unique parents. "
-//            << "Selected " << selectedParents.size() << " out of " << numParents << ".\n";
-//    }
-//
-//    return selectedParents;
-//}
-//
-//
-//bool DAG::addTransaction(TransactionNode& transaction) {
-//    // Input validation for the transaction fields
-//    double fee;
-//    std::cout << "Enter Transaction Fee: ";
-//    while (!(std::cin >> fee) || fee < 0) {
-//        std::cout << "Invalid fee. Please enter a positive number: ";
-//        std::cin.clear();
-//        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-//    }
-//
-//    // Proceed to select parents
-//    std::vector<std::string> parentHashes = selectParentsMCMC(3);
-//
-//    transaction.parentHashes = parentHashes;
-//    transactions[transaction.hash] = transaction;
-//
-//    for (const auto& parentHash : parentHashes) {
-//        adjList[parentHash].push_back(transaction.hash);
-//    }
-//
-//    std::unordered_set<std::string> visited;
-//    std::unordered_set<std::string> stack;
-//
-//    // Check for cycles after adding the transaction
-//    for (const auto& pair : adjList) {
-//        if (hasCycle(pair.first, visited, stack)) {
-//            for (const auto& parentHash : parentHashes) {
-//                adjList[parentHash].pop_back();  // Remove parent relation if cycle is detected
-//            }
-//            transactions.erase(transaction.hash);  // Remove the transaction
-//            std::cout << "Cannot add transaction " << transaction.id << " as it creates a cycle.\n";
-//            return false;
-//        }
-//    }
-//
-//    // Update cumulative weights of the parents
-//    for (const auto& parentHash : parentHashes) {
-//        updateCumulativeWeights(parentHash);
-//    }
-//
-//    std::cout << "Transaction " << transaction.id << " added successfully with hash: " << transaction.hash << ".\n";
-//    return true;
-//}
-//
-//// Print the DAG details
-//void DAG::printDAG() const {
-//    std::cout << "All transactions:\n";
-//    for (const auto& pair : transactions) {
-//        const auto& t = pair.second;
-//        std::cout << "ID: " << t.id << ", Sender: " << t.senderAcc
-//            << ", Receiver: " << t.receiverAcc << ", Amount: "
-//            << t.amount << ", Fee: " << t.fee << ", Timestamp: " << t.timestamp
-//            << ", Hash: " << t.hash << ", Parents: ";
-//        for (const auto& parentHash : t.parentHashes) {
-//            std::cout << parentHash << " ";
-//        }
-//        std::cout << ", Validated: " << (t.isValidated ? "Yes" : "No") << "\n";
-//    }
-//
-//    std::cout << "\nGraph Adjacency List:\n";
-//    for (const auto& pair : adjList) {
-//        std::cout << pair.first << " -> ";
-//        for (const auto& neighbor : pair.second) {
-//            std::cout << neighbor << ", ";
-//        }
-//        std::cout << std::endl;
-//    }
-//}
-//
-//
 
 #include "DAG.h"
 #include <iostream>
@@ -338,10 +81,10 @@ bool DAG::hasCycle(const std::string& node,
     std::unordered_set<std::string>& visited,
     std::unordered_set<std::string>& stack) {
     if (stack.find(node) != stack.end()) {
-        return true;  // Cycle detected
+        return true; 
     }
     if (visited.find(node) != visited.end()) {
-        return false; // Node already visited
+        return false; 
     }
 
     visited.insert(node);
@@ -358,19 +101,23 @@ bool DAG::hasCycle(const std::string& node,
 }
 
 // Update cumulative weights of a transaction recursively
+// Update the cumulative weight of a transaction and its parents
 int DAG::updateCumulativeWeights(const std::string& hash) {
     if (cumulativeWeights.find(hash) != cumulativeWeights.end()) {
-        return cumulativeWeights[hash];
+        return cumulativeWeights[hash]; // Return if already calculated
     }
 
-    cumulativeWeights[hash] = 1; // Base weight of 1
-
-    for (const auto& neighbor : adjList[hash]) {
-        cumulativeWeights[hash] += updateCumulativeWeights(neighbor);
+    cumulativeWeights[hash] = 1; // Base weight
+    for (const auto& parent : adjList[hash]) {
+        cumulativeWeights[hash] += updateCumulativeWeights(parent); // Accumulate parent's weight
     }
 
     return cumulativeWeights[hash];
 }
+
+
+
+
 // Select parents for a transaction using MCMC method
 std::vector<std::string> DAG::selectParentsMCMC(size_t numParents) {
     std::vector<TipInfo> unapprovedTips;
@@ -473,6 +220,7 @@ double DAG::calculateFee(double amount) {
 }
 
 // Add a transaction to the DAG
+// Add a transaction to the DAG
 bool DAG::addTransaction(TransactionNode& transaction) {
     // Calculate the fee based on the transaction amount
     double fee = calculateFee(transaction.amount);
@@ -491,6 +239,11 @@ bool DAG::addTransaction(TransactionNode& transaction) {
         adjList[parentHash].push_back(transaction.hash);  // Add this transaction as a child of the parent
     }
 
+    // Update cumulative weights of the parents
+    for (const auto& parentHash : parentHashes) {
+        updateCumulativeWeights(parentHash);
+    }
+
     std::unordered_set<std::string> visited;
     std::unordered_set<std::string> stack;
 
@@ -507,12 +260,48 @@ bool DAG::addTransaction(TransactionNode& transaction) {
         }
     }
 
-    // Update cumulative weights of the parents
-    for (const auto& parentHash : parentHashes) {
-        updateCumulativeWeights(parentHash);
+    return true;
+}
+
+void DAG::performConsensus(double validationThreshold) {
+    std::unordered_set<std::string> visited;
+
+    for (const auto& pair : transactions) {
+        const auto& hash = pair.first;
+        if (visited.find(hash) == visited.end()) {
+            validateTransaction(hash, validationThreshold, visited);
+        }
+    }
+}
+
+
+bool DAG::validateTransaction(const std::string& hash, double validationThreshold, std::unordered_set<std::string>& visited) {
+    if (visited.find(hash) != visited.end()) {
+        return transactions[hash].isValidated; // Already validated
     }
 
-    return true;
+    visited.insert(hash);
+
+    // Recalculate cumulative weight
+    int cumulativeWeight = updateCumulativeWeights(hash);
+    std::cout << "Validating transaction " << hash << " with cumulative weight: " << cumulativeWeight << " against threshold " << validationThreshold << std::endl;
+
+    // Mark as validated if the cumulative weight meets the threshold
+    if (cumulativeWeight >= validationThreshold) {
+        transactions[hash].isValidated = true;
+        std::cout << "Transaction " << hash << " validated!" << std::endl;
+        return true;
+    }
+
+    // Validate parents recursively
+    for (const auto& parent : transactions[hash].parentHashes) {
+        if (!validateTransaction(parent, validationThreshold, visited)) {
+            std::cout << "Parent " << parent << " validation failed!" << std::endl;
+            return false; // If any parent is invalid, this transaction is invalid
+        }
+    }
+
+    return transactions[hash].isValidated;
 }
 
 // Print the DAG details

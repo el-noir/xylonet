@@ -48,7 +48,8 @@ public:
 
     // Function to select parents using Markov Chain Monte Carlo (MCMC) method
     vector<string> selectParentsMCMC(size_t numParents = 2);
-
+    void performConsensus(double validationThreshold);
+    bool validateTransaction(const std::string& hash, double validationThreshold, std::unordered_set<std::string>& visited);
     // Function to add a new transaction to the DAG
     bool addTransaction(TransactionNode& transaction);
 

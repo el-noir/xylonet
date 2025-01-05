@@ -87,7 +87,6 @@ void saveDAGToFile(const DAG& dag) {
     cout << "DAG saved to file successfully.\n";
 }
 
-// Function to load the DAG from a file
 // Function to load the DAG from a file and skip the title row
 void loadDAGFromFile(DAG& dag) {
     ifstream file("dag_transactions.txt");
@@ -131,13 +130,17 @@ void loadDAGFromFile(DAG& dag) {
     }
     cout << "DAG loaded from file successfully.\n";
 }
-
 int main() {
     DAG dag;
-    loadDAGFromFile(dag);  // Load existing transactions if any
+
+    // Load transactions from file
+    loadDAGFromFile(dag);
+
+    // Perform consensus with a threshold of 10
+    double validationThreshold = 1.0;
+    dag.performConsensus(validationThreshold);
 
     int choice;
-
     do {
         displayMenu();
         cin >> choice;
@@ -146,12 +149,13 @@ int main() {
         case 1:
             addTransaction(dag);
             saveDAGToFile(dag);
+            dag.performConsensus(validationThreshold); // Re-run consensus after adding transactions
             break;
         case 2:
             dag.printDAG();
             break;
         case 3:
-            saveDAGToFile(dag);  // Save the DAG to file before exiting
+            saveDAGToFile(dag);
             cout << "Exiting the program. Goodbye!\n";
             break;
         default:
