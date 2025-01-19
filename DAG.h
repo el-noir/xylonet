@@ -13,30 +13,67 @@
 #include <cmath>
 #include "TransactionNode.h"
 #include "HashUtils.h"
+#include <stdexcept>
 
 using namespace std;
 
-// Structure for tip information (transaction data)
 struct TipInfo {
-    std::string hash;           // Hash of the transaction
-    int cumulativeWeight;       // Cumulative weight (approvals count)
-    time_t timestamp;           // Timestamp of the transaction
-    int amount;                 // Transaction amount
-    int fee;                    // Transaction fee
+    std::string hash;         
+    int cumulativeWeight;      
+    time_t timestamp;        
+    int amount;               
+    int fee;                   
 
-    // Constructor to initialize TipInfo object with necessary parameters
     TipInfo(const std::string& h, int cWeight, time_t ts, int amt, int f)
         : hash(h), cumulativeWeight(cWeight), timestamp(ts), amount(amt), fee(f) {}
 };
 
+template <typename T>
+class Stack {
+private:
+    std::vector<T> container;
+
+public:
+    void push(const T& element) {
+        container.push_back(element);
+    }
+
+    T pop() {
+        if (container.empty()) {
+            throw std::runtime_error("Stack Underflow! No elements to pop.");
+        }
+        T topElement = container.back();
+        container.pop_back();
+        return topElement;
+    }
+
+    T top() const {
+        if (container.empty()) {
+            throw std::runtime_error("Stack is empty! No top element.");
+        }
+        return container.back();
+    }
+
+    bool isEmpty() const {
+        return container.empty();
+    }
+
+    size_t size() const {
+        return container.size();
+    }
+};
+
 class DAG {
 private:
-    unordered_map<string, vector<string>> adjList;          // Adjacency list for the DAG
-    unordered_map<string, TransactionNode> transactions;    // Transactions mapped by hash
-    unordered_map<string, int> cumulativeWeights;           // Cumulative weights for transactions
+    std::unordered_map<std::string, std::vector<std::string>> adjList;      
+    unordered_map<string, TransactionNode> transactions;   
+    unordered_map<string, int> cumulativeWeights;           
 
     // Helper function to check for cycles in the DAG
-    bool hasCycle(const string& node, unordered_set<string>& visited, unordered_set<string>& Stack);
+    bool hasCycle(const std::string& node,
+        std::unordered_set<std::string>& visited,
+        Stack<std::string>& stack);
+
 
     // Recursive function to update cumulative weights for each transaction
     int updateCumulativeWeights(const string& hash);
@@ -50,7 +87,6 @@ public:
     vector<string> selectParentsMCMC(size_t numParents = 2);
     void performConsensus(double validationThreshold);
     bool validateTransaction(const std::string& hash, double validationThreshold, std::unordered_set<std::string>& visited);
-    // Function to add a new transaction to the DAG
     bool addTransaction(TransactionNode& transaction);
 
     // Function to print the DAG details (transactions and adjacency list)

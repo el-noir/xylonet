@@ -11,12 +11,12 @@ public:
     std::string id;                        // Unique identifier of the transaction
     std::string senderAcc;                 // Sender account
     std::string receiverAcc;               // Receiver account
-    double amount;                         // Transaction amount
-    double fee;                            // Transaction fee
+    double amount=0.0;                         // Transaction amount
+    double fee=0.0;                            // Transaction fee
     time_t timestamp;                      // Timestamp of the transaction
     std::string hash;                      // Unique hash for the transaction
     std::vector<std::string> parentHashes; // Hashes of parent transactions
-    bool isValidated;                      // Validation status of the transaction
+    bool isValidated = false;                       // Validation status of the transaction
 
     // Constructors
     TransactionNode() = default;  // Default constructor

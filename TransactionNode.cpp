@@ -12,8 +12,6 @@ namespace std {
     };
 }
 
-
-// Constructor implementation
 TransactionNode::TransactionNode(const std::string& id, const std::string& senderAcc, const std::string& receiverAcc,
     double amount, double fee, time_t timestamp, const std::vector<std::string>& parentHashes, bool isValidated)
     : id(id), senderAcc(senderAcc), receiverAcc(receiverAcc), amount(amount), fee(fee),
